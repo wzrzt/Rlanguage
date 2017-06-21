@@ -4,6 +4,11 @@ Rain.Wei
 2017/6/18
 
 -   [Set Calculation](#set-calculation)
+-   [6.4 Function in stringr](#function-in-stringr)
+-   [7 Practical Applications](#practical-applications)
+-   [7.1 Reversing a string](#reversing-a-string)
+-   [7.2 Matching e-mail addresses](#matching-e-mail-addresses)
+-   [7.3 Matching HTML elements](#matching-html-elements)
 
 ``` r
 # We can use regexpr() to get the number of times that a searched pattern is found in a character  vector. When there is no match, we get a value -1. 
@@ -698,3 +703,586 @@ identical(set7, set9)
 ``` r
 ## [1] FALSE
 ```
+
+``` r
+# some text
+text = c("one word", "a sentence", "you and me", "three two one")
+# pattern
+pat = "one" 
+
+# handy function to extract matched term
+x = regexpr(pat, text) 
+x
+```
+
+    ## [1]  1 -1 -1 11
+    ## attr(,"match.length")
+    ## [1]  3 -1 -1  3
+    ## attr(,"useBytes")
+    ## [1] TRUE
+
+``` r
+substring(text, x, x + attr(x, "match.length") - 1)
+```
+
+    ## [1] "one" ""    ""    "one"
+
+``` r
+## [1] "one" "" "" "one"
+# with NA
+regexpr(pat, c(text, NA))
+```
+
+    ## [1]  1 -1 -1 11 NA
+    ## attr(,"match.length")
+    ## [1]  3 -1 -1  3 NA
+    ## attr(,"useBytes")
+    ## [1] TRUE
+
+``` r
+## [1] 1 -1 -1 11 NA
+## attr(,"match.length")
+## [1] 3 -1 -1 3 NA
+```
+
+``` r
+# string
+Rstring = c("The R Foundation",
+"for Statistical Computing",
+"R is FREE software",
+"R is a collaborative project")
+# substitute 'R' with 'RR'
+sub("R", "RR", Rstring)
+```
+
+    ## [1] "The RR Foundation"             "for Statistical Computing"    
+    ## [3] "RR is FREE software"           "RR is a collaborative project"
+
+``` r
+# string
+Rstring = c("The R Foundation",
+"for Statistical Computing",
+"R is FREE software",
+"R is a collaborative project")
+# substitute
+gsub("R", "RR", Rstring)
+```
+
+    ## [1] "The RR Foundation"             "for Statistical Computing"    
+    ## [3] "RR is FRREE software"          "RR is a collaborative project"
+
+``` r
+# a sentence
+sentence = c("R is a collaborative project with many contributors")
+# split into words
+strsplit(sentence, " ")
+```
+
+    ## [[1]]
+    ## [1] "R"             "is"            "a"             "collaborative"
+    ## [5] "project"       "with"          "many"          "contributors"
+
+``` r
+# telephone numbers
+tels = c("510-548-2238", "707-231-2440", "650-752-1300")
+# split each number into its portions
+strsplit(tels, "-")
+```
+
+    ## [[1]]
+    ## [1] "510"  "548"  "2238"
+    ## 
+    ## [[2]]
+    ## [1] "707"  "231"  "2440"
+    ## 
+    ## [[3]]
+    ## [1] "650"  "752"  "1300"
+
+6.4 Function in stringr
+-----------------------
+
+``` r
+# some strings
+strings = c("12 Jun 2002", " 8 September 2004 ", "22-July-2009 ",
+"01 01 2001", "date", "02.06.2000",
+"xxx-yyy-zzzz", "$2,600")
+# date pattern (month as text)
+dates = "([0-9]{1,2})[- .]([a-zA-Z]+)[- .]([0-9]{4})"
+# detect dates
+str_detect(strings, dates)
+```
+
+    ## [1]  TRUE  TRUE  TRUE FALSE FALSE FALSE FALSE FALSE
+
+``` r
+# tweets about 'Paris'
+paris_tweets = c(
+"#Paris is chock-full of cultural and culinary attractions",
+"Some time in #Paris along Canal St.-Martin famous by #Amelie",
+"While you're in #Paris, stop at cafe: http://goo.gl/yaCbW",
+"Paris, the city of light")
+# hashtag pattern 
+hash = "#[a-zA-Z]{1,}"
+# extract (first) hashtag
+str_extract(paris_tweets, hash)
+```
+
+    ## [1] "#Paris" "#Paris" "#Paris" NA
+
+In addition, those elements that don’t match the pattern are indicated with an empty character vector character(0) instead of NA
+
+``` r
+# extract (all) hashtags
+str_extract_all(paris_tweets, "#[a-zA-Z]{1,}") 
+```
+
+    ## [[1]]
+    ## [1] "#Paris"
+    ## 
+    ## [[2]]
+    ## [1] "#Paris"  "#Amelie"
+    ## 
+    ## [[3]]
+    ## [1] "#Paris"
+    ## 
+    ## [[4]]
+    ## character(0)
+
+``` r
+# string vector
+strings = c("12 Jun 2002", " 8 September 2004 ", "22-July-2009 ",
+"01 01 2001", "date", "02.06.2000",
+"xxx-yyy-zzzz", "$2,600")
+# date pattern (month as text)
+dates = "([0-9]{1,2})[- .]([a-zA-Z]+)[- .]([0-9]{4})"
+# extract first matched group
+str_match(strings, dates)
+```
+
+    ##      [,1]               [,2] [,3]        [,4]  
+    ## [1,] "12 Jun 2002"      "12" "Jun"       "2002"
+    ## [2,] "8 September 2004" "8"  "September" "2004"
+    ## [3,] "22-July-2009"     "22" "July"      "2009"
+    ## [4,] NA                 NA   NA          NA    
+    ## [5,] NA                 NA   NA          NA    
+    ## [6,] NA                 NA   NA          NA    
+    ## [7,] NA                 NA   NA          NA    
+    ## [8,] NA                 NA   NA          NA
+
+``` r
+# tweets about 'Paris'
+paris_tweets = c(
+"#Paris is chock-full of cultural and culinary attractions",
+"Some time in #Paris along Canal St.-Martin famous by #Amelie",
+"While you're in #Paris, stop at cafe: http://goo.gl/yaCbW",
+"Paris, the city of light")
+# match (all) hashtags in 'paris_tweets'
+str_match_all(paris_tweets, "#[a-zA-Z]{1,}")
+```
+
+    ## [[1]]
+    ##      [,1]    
+    ## [1,] "#Paris"
+    ## 
+    ## [[2]]
+    ##      [,1]     
+    ## [1,] "#Paris" 
+    ## [2,] "#Amelie"
+    ## 
+    ## [[3]]
+    ##      [,1]    
+    ## [1,] "#Paris"
+    ## 
+    ## [[4]]
+    ##      [,1]
+
+Those elements that don’t match the pattern are indicated with an empty character vector instead of an NA.
+
+``` r
+# locate position of (first) hashtag
+str_locate(paris_tweets, "#[a-zA-Z]{1,}")
+```
+
+    ##      start end
+    ## [1,]     1   6
+    ## [2,]    14  19
+    ## [3,]    17  22
+    ## [4,]    NA  NA
+
+``` r
+# locate (all) hashtags in 'paris_tweets'
+str_locate_all(paris_tweets, "#[a-zA-Z]{1,}")
+```
+
+    ## [[1]]
+    ##      start end
+    ## [1,]     1   6
+    ## 
+    ## [[2]]
+    ##      start end
+    ## [1,]    14  19
+    ## [2,]    54  60
+    ## 
+    ## [[3]]
+    ##      start end
+    ## [1,]    17  22
+    ## 
+    ## [[4]]
+    ##      start end
+
+``` r
+# city names
+cities = c("San Francisco", "Barcelona", "Naples", "Paris")
+# replace first matched vowel
+str_replace(cities, "[aeiou]", ";")
+```
+
+    ## [1] "S;n Francisco" "B;rcelona"     "N;ples"        "P;ris"
+
+``` r
+## [1] "S;n Francisco" "B;rcelona" "N;ples" "P;ris"
+```
+
+``` r
+# replace first matched consonant
+str_replace(cities, "[^aeiou]", ";")
+```
+
+    ## [1] ";an Francisco" ";arcelona"     ";aples"        ";aris"
+
+``` r
+## [1] ";an Francisco" ";arcelona" ";aples" ";aris"
+```
+
+``` r
+# city names
+cities = c("San Francisco", "Barcelona", "Naples", "Paris")
+# replace all matched vowel
+str_replace_all(cities, pattern = "[aeiou]", ";")
+```
+
+    ## [1] "S;n Fr;nc;sc;" "B;rc;l;n;"     "N;pl;s"        "P;r;s"
+
+``` r
+## [1] "S;n Fr;nc;sc;" "B;rc;l;n;" "N;pl;s" "P;r;s"
+```
+
+``` r
+# replace all matched consonants
+str_replace_all(cities, pattern = "[^aeiou]", ";")
+```
+
+    ## [1] ";a;;;;a;;i;;o" ";a;;e;o;a"     ";a;;e;"        ";a;i;"
+
+``` r
+## [1] ";a;;;;a;;i;;o" ";a;;e;o;a" ";a;;e;" ";a;i;"
+```
+
+``` r
+# a sentence
+sentence = c("R is a collaborative project with many contributors")
+# split into words
+str_split(sentence, " ")
+```
+
+    ## [[1]]
+    ## [1] "R"             "is"            "a"             "collaborative"
+    ## [5] "project"       "with"          "many"          "contributors"
+
+``` r
+# telephone numbers
+tels = c("510-548-2238", "707-231-2440", "650-752-1300")
+# split each number into its portions
+str_split(tels, "-")
+```
+
+    ## [[1]]
+    ## [1] "510"  "548"  "2238"
+    ## 
+    ## [[2]]
+    ## [1] "707"  "231"  "2440"
+    ## 
+    ## [[3]]
+    ## [1] "650"  "752"  "1300"
+
+``` r
+# string
+flavors = c("chocolate", "vanilla", "cinnamon", "mint", "lemon")
+# split by vowels
+str_split(flavors, "[aeiou]")
+```
+
+    ## [[1]]
+    ## [1] "ch" "c"  "l"  "t"  ""  
+    ## 
+    ## [[2]]
+    ## [1] "v"  "n"  "ll" ""  
+    ## 
+    ## [[3]]
+    ## [1] "c"  "nn" "m"  "n" 
+    ## 
+    ## [[4]]
+    ## [1] "m"  "nt"
+    ## 
+    ## [[5]]
+    ## [1] "l" "m" "n"
+
+``` r
+# split by first vowel
+str_split(flavors, "[aeiou]", n = 2)
+```
+
+    ## [[1]]
+    ## [1] "ch"     "colate"
+    ## 
+    ## [[2]]
+    ## [1] "v"     "nilla"
+    ## 
+    ## [[3]]
+    ## [1] "c"      "nnamon"
+    ## 
+    ## [[4]]
+    ## [1] "m"  "nt"
+    ## 
+    ## [[5]]
+    ## [1] "l"   "mon"
+
+7 Practical Applications
+------------------------
+
+1.  reversing a string
+2.  matching email addresses
+3.  matching html elements (href’s and img’s anchors)
+4.  some stats and analytics of character data
+
+7.1 Reversing a string
+----------------------
+
+``` r
+# function that reverses a string by characters
+reverse_chars <- function(string)
+{
+# split string by characters
+string_split = strsplit(string, split = "")
+# reverse order
+rev_order = nchar(string):1
+# reversed characters
+reversed_chars = string_split[[1]][rev_order]
+# collapse reversed characters
+paste(reversed_chars, collapse="")
+}
+
+# try 'reverse_chars'
+reverse_chars("abcdefg")
+```
+
+    ## [1] "gfedcba"
+
+``` r
+## [1] "gfedcba"
+# try with non-character input
+# reverse_chars(12345)
+```
+
+``` r
+# reversing a string by characters
+reverse_chars <- function(string)
+{
+string_split = strsplit(as.character(string), split = "")
+reversed_split = string_split[[1]][nchar(string):1]
+paste(reversed_split, collapse="")
+} 
+
+# example with one word
+reverse_chars("atmosphere")
+```
+
+    ## [1] "erehpsomta"
+
+``` r
+## [1] "erehpsomta"
+# example with a several words
+reverse_chars("the big bang theory")
+```
+
+    ## [1] "yroeht gnab gib eht"
+
+``` r
+## [1] "yroeht gnab gib eht"
+```
+
+``` r
+# try 'reverse_chars'
+reverse_chars("abcdefg")
+```
+
+    ## [1] "gfedcba"
+
+``` r
+## [1] "gfedcba"
+# try with non-character input
+reverse_chars(12345)
+```
+
+    ## [1] "54321"
+
+``` r
+## [1] "54321"
+```
+
+``` r
+# reverse vector (by characters)
+lapply(c("the big bang theory", "atmosphere"), reverse_chars)
+```
+
+    ## [[1]]
+    ## [1] "yroeht gnab gib eht"
+    ## 
+    ## [[2]]
+    ## [1] "erehpsomta"
+
+``` r
+# function that reverses a string by words
+reverse_words <- function(string)
+{
+# split string by blank spaces
+string_split = strsplit(as.character(string), split = " ")
+# how many split terms?
+string_length = length(string_split[[1]])
+# decide what to do
+if (string_length == 1) {
+# one word (do nothing)
+reversed_string = string_split[[1]]
+} else {
+# more than one word (collapse them)
+reversed_split = string_split[[1]][string_length:1]
+reversed_string = paste(reversed_split, collapse = " ")
+}
+# output
+return(reversed_string)
+}
+# examples
+reverse_words("atmosphere")
+```
+
+    ## [1] "atmosphere"
+
+``` r
+## [1] "atmosphere"
+reverse_words("the big bang theory")
+```
+
+    ## [1] "theory bang big the"
+
+``` r
+## [1] "theory bang big the"
+```
+
+``` r
+# reverse vector (by words)
+lapply(c("the big bang theory", "atmosphere"), reverse_words)
+```
+
+    ## [[1]]
+    ## [1] "theory bang big the"
+    ## 
+    ## [[2]]
+    ## [1] "atmosphere"
+
+7.2 Matching e-mail addresses
+-----------------------------
+
+``` r
+# pattern
+email_pat = "^([a-z0-9_\\.-]+)@([\\da-z\\.-]+)\\.([a-z\\.]{2,6})$"
+# string that matches
+grepl(pattern = email_pat, x = "gaston@abc.com")
+```
+
+    ## [1] TRUE
+
+``` r
+# another string that matches
+grep(pattern = email_pat, x = "gaston.sanchez@research-center.fr")
+```
+
+    ## [1] 1
+
+``` r
+# unmatched email (TLD too long)
+grep(pattern = email_pat, x = "gaston@abc.something") 
+```
+
+    ## integer(0)
+
+``` r
+# potential email addresses
+emails = c(
+"simple@example.com",
+"johnsmith@email.gov",
+"marie.curie@college.edu",
+"very.common@example.com",
+"a.little.lengthy.but.ok@dept.example.com",
+"disposable.style.email.with+symbol@example.com",
+"not_good@email.address")
+# detect pattern
+str_detect(string=emails, pattern=email_pat)
+```
+
+    ## [1]  TRUE  TRUE  TRUE  TRUE  TRUE FALSE FALSE
+
+7.3 Matching HTML elements
+--------------------------
+
+``` r
+# read html content
+mail_lists = readLines("https://www.r-project.org/mail.html") 
+```
+
+``` r
+# SIG's href pattern
+sig_pattern = '^.*<p> *<a href="(https.*)">.*$'
+# find SIG href attributes
+sig_hrefs = grep(sig_pattern, mail_lists, value = TRUE)
+# let's see first 5 elements (shorten output)
+shorten_sigs = rep("", 5)
+for (i in 1:5) {
+shorten_sigs[i] = toString(sig_hrefs[i], width=70)
+}
+shorten_sigs
+```
+
+    ## [1] "<li><p><a href=\"https://stat.ethz.ch/mailman/listinfo/r-sig-mac\"><...."
+    ## [2] "<li><p><a href=\"https://stat.ethz.ch/mailman/listinfo/r-sig-db\"><c...."
+    ## [3] "<li><p><a href=\"https://stat.ethz.ch/mailman/listinfo/r-sig-debian...." 
+    ## [4] "<li><p><a href=\"https://stat.ethz.ch/mailman/listinfo/r-sig-dynami...." 
+    ## [5] "<li><p><a href=\"https://stat.ethz.ch/mailman/listinfo/r-sig-ecolog...."
+
+``` r
+# get first matched group
+sub(sig_pattern, "\\1", sig_hrefs)
+```
+
+    ##  [1] "https://stat.ethz.ch/mailman/listinfo/r-sig-mac"           
+    ##  [2] "https://stat.ethz.ch/mailman/listinfo/r-sig-db"            
+    ##  [3] "https://stat.ethz.ch/mailman/listinfo/r-sig-debian"        
+    ##  [4] "https://stat.ethz.ch/mailman/listinfo/r-sig-dynamic-models"
+    ##  [5] "https://stat.ethz.ch/mailman/listinfo/r-sig-ecology"       
+    ##  [6] "https://stat.ethz.ch/mailman/listinfo/r-sig-epi"           
+    ##  [7] "https://stat.ethz.ch/mailman/listinfo/r-sig-fedora"        
+    ##  [8] "https://stat.ethz.ch/mailman/listinfo/r-sig-finance"       
+    ##  [9] "https://stat.ethz.ch/mailman/listinfo/r-sig-geo"           
+    ## [10] "https://stat.ethz.ch/mailman/listinfo/r-sig-gr"            
+    ## [11] "https://stat.ethz.ch/mailman/listinfo/r-sig-gui"           
+    ## [12] "https://stat.ethz.ch/mailman/listinfo/r-sig-hpc"           
+    ## [13] "https://stat.ethz.ch/mailman/listinfo/r-sig-insurance"     
+    ## [14] "https://stat.ethz.ch/mailman/listinfo/r-sig-jobs"          
+    ## [15] "https://stat.ethz.ch/mailman/listinfo/r-sig-mediawiki"     
+    ## [16] "https://stat.ethz.ch/mailman/listinfo/r-sig-mixed-models"  
+    ## [17] "https://stat.ethz.ch/mailman/listinfo/r-sig-networks"      
+    ## [18] "https://stat.ethz.ch/mailman/listinfo/r-sig-phylo"         
+    ## [19] "https://stat.ethz.ch/mailman/listinfo/r-sig-qa"            
+    ## [20] "https://stat.ethz.ch/mailman/listinfo/r-sig-robust"        
+    ## [21] "https://stat.ethz.ch/mailman/listinfo/r-sig-teaching"
+
+As you can see, we are using the regex pattern \\\\1 in the sub() function. Generally speaking \\\\N is replaced with the N-th group specified in the regular expression. The first matched group is referenced by \\\\1. In our example, the first group is everything that is contained in the curved brackets, that is: (https.\*), which are in fact the links we are looking for.
