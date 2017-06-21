@@ -1456,6 +1456,32 @@ table(count_words)
     ##   2   1   1   2   1   1   1   1   1   2   1   1   2   1
 
 ``` r
+head(data.frame(word=unique_words, Freq = count_words), 20)
+```
+
+    ##                word Freq
+    ## 1                 3    1
+    ## 2           Biotech    1
+    ## 3                3D    1
+    ## 4          Printing    1
+    ## 5                in   49
+    ## 6          Medicine   63
+    ## 7              AAPS    1
+    ## 8              Open    6
+    ## 9              AIDS    3
+    ## 10         Research   91
+    ## 11              and  234
+    ## 12          Therapy   11
+    ## 13              AMB    1
+    ## 14          Express    1
+    ## 15             Acta    3
+    ## 16 Neuropathologica    1
+    ## 17   Communications    4
+    ## 18      Veterinaria    2
+    ## 19     Scandinavica    2
+    ## 20        Addiction    2
+
+``` r
 # equivalently
 table(count_words_alt)
 ```
@@ -1491,7 +1517,7 @@ barplot(top_30_freqs, border = NA, names.arg = top_30_words,
 las = 2, ylim = c(0, 100 * ceiling(max(count_words_alt)/100)))
 ```
 
-![](RegExp_files/figure-markdown_github/unnamed-chunk-71-1.png)
+![](RegExp_files/figure-markdown_github/unnamed-chunk-72-1.png)
 
 ``` r
 expt1 <- try(library(wordcloud), silent = T) 
@@ -1512,4 +1538,7 @@ wordcloud(unique_words, count_words, scale=c(7.5,.5), min.freq=6,
           colors = rainbow(20))
 ```
 
-![](RegExp_files/figure-markdown_github/unnamed-chunk-72-1.png)
+    ## Warning in wordcloud(unique_words, count_words, scale = c(7.5, 0.5),
+    ## min.freq = 6, : and could not be fit on page. It will not be plotted.
+
+![](RegExp_files/figure-markdown_github/unnamed-chunk-73-1.png)

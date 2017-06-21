@@ -789,6 +789,10 @@ table(count_words)
 ```
 
 ```{r}
+head(data.frame(word=unique_words, Freq = count_words), 20)
+```
+
+```{r}
 # equivalently
 table(count_words_alt)
 ```
