@@ -9,6 +9,7 @@ Rain.Wei
 -   [7.1 Reversing a string](#reversing-a-string)
 -   [7.2 Matching e-mail addresses](#matching-e-mail-addresses)
 -   [7.3 Matching HTML elements](#matching-html-elements)
+-   [7.4 Text Analysis of BioMed Central Journals](#text-analysis-of-biomed-central-journals)
 
 ``` r
 # We can use regexpr() to get the number of times that a searched pattern is found in a character  vector. When there is no match, we get a value -1. 
@@ -1286,3 +1287,229 @@ sub(sig_pattern, "\\1", sig_hrefs)
     ## [21] "https://stat.ethz.ch/mailman/listinfo/r-sig-teaching"
 
 As you can see, we are using the regex pattern \\\\1 in the sub() function. Generally speaking \\\\N is replaced with the N-th group specified in the regular expression. The first matched group is referenced by \\\\1. In our example, the first group is everything that is contained in the curved brackets, that is: (https.\*), which are in fact the links we are looking for.
+
+7.4 Text Analysis of BioMed Central Journals
+--------------------------------------------
+
+``` r
+# link of data set
+url = "https://www.biomedcentral.com/info/journals/biomedcentraljournallist.txt"
+# read data (stringsAsFactors=FALSE)
+biomed = read.table(url, header = TRUE, sep = ",", stringsAsFactors = FALSE)
+```
+
+``` r
+# structure of the dataset
+str(biomed, vec.len = 1)
+```
+
+    ## 'data.frame':    902 obs. of  7 variables:
+    ##  $ Publisher     : chr  "Springer" ...
+    ##  $ Journal.name  : chr  "3 Biotech" ...
+    ##  $ Abbreviation  : chr  "3 Biotech" ...
+    ##  $ ISSN          : chr  "2190-5738" ...
+    ##  $ URL           : chr  "http://www.springer.com/13205" ...
+    ##  $ Start.Date    : int  2011 2015 ...
+    ##  $ Citation.Style: chr  "n/a" ...
+
+``` r
+# first 5 journal names
+head(biomed$Journal.name, 5)
+```
+
+    ## [1] "3 Biotech"                 "3D Printing in Medicine"  
+    ## [3] "AAPS Open"                 "AIDS Research and Therapy"
+    ## [5] "AIDS Research and Therapy"
+
+``` r
+# get first 10 names
+titles10 = biomed$Journal.name[1:10]
+titles10
+```
+
+    ##  [1] "3 Biotech"                            
+    ##  [2] "3D Printing in Medicine"              
+    ##  [3] "AAPS Open"                            
+    ##  [4] "AIDS Research and Therapy"            
+    ##  [5] "AIDS Research and Therapy"            
+    ##  [6] "AMB Express"                          
+    ##  [7] "Acta Neuropathologica Communications" 
+    ##  [8] "Acta Veterinaria Scandinavica"        
+    ##  [9] "Acta Veterinaria Scandinavica"        
+    ## [10] "Addiction Science & Clinical Practice"
+
+``` r
+# remove punctuation
+titles10 = str_replace_all(titles10, pattern = "[[:punct:]]", "")
+titles10
+```
+
+    ##  [1] "3 Biotech"                           
+    ##  [2] "3D Printing in Medicine"             
+    ##  [3] "AAPS Open"                           
+    ##  [4] "AIDS Research and Therapy"           
+    ##  [5] "AIDS Research and Therapy"           
+    ##  [6] "AMB Express"                         
+    ##  [7] "Acta Neuropathologica Communications"
+    ##  [8] "Acta Veterinaria Scandinavica"       
+    ##  [9] "Acta Veterinaria Scandinavica"       
+    ## [10] "Addiction Science  Clinical Practice"
+
+``` r
+# trim extra whitespaces
+titles10 = str_replace_all(titles10, pattern = "\\s+", " ")
+titles10
+```
+
+    ##  [1] "3 Biotech"                           
+    ##  [2] "3D Printing in Medicine"             
+    ##  [3] "AAPS Open"                           
+    ##  [4] "AIDS Research and Therapy"           
+    ##  [5] "AIDS Research and Therapy"           
+    ##  [6] "AMB Express"                         
+    ##  [7] "Acta Neuropathologica Communications"
+    ##  [8] "Acta Veterinaria Scandinavica"       
+    ##  [9] "Acta Veterinaria Scandinavica"       
+    ## [10] "Addiction Science Clinical Practice"
+
+``` r
+# remove punctuation symbols
+all_titles = str_replace_all(biomed$Journal.name, pattern = "[[:punct:]]", "") 
+# trim extra whitespaces
+all_titles = str_replace_all(all_titles, pattern = "\\s+", " ") 
+# split titles by words
+all_titles_list = str_split(all_titles, pattern = " ")
+# show first 2 elements
+all_titles_list[1:2]
+```
+
+    ## [[1]]
+    ## [1] "3"       "Biotech"
+    ## 
+    ## [[2]]
+    ## [1] "3D"       "Printing" "in"       "Medicine"
+
+``` r
+# how many words per title
+words_per_title = sapply(all_titles_list, length)
+# table of frequencies
+table(words_per_title)
+```
+
+    ## words_per_title
+    ##   1   2   3   4   5   6   7   8   9 
+    ##  30 250 201 169 113  85  32  19   3
+
+``` r
+# distribution
+100 * round(table(words_per_title)/length(words_per_title), 4) 
+```
+
+    ## words_per_title
+    ##     1     2     3     4     5     6     7     8     9 
+    ##  3.33 27.72 22.28 18.74 12.53  9.42  3.55  2.11  0.33
+
+``` r
+# summary
+summary(words_per_title)
+```
+
+    ##    Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+    ##   1.000   2.000   3.000   3.644   5.000   9.000
+
+``` r
+# longest journal
+all_titles[which(words_per_title == 9)]
+```
+
+    ## [1] "International Journal Of Recycling of Organic Waste in Agriculture"
+    ## [2] "Journal of Venomous Animals and Toxins including Tropical Diseases"
+    ## [3] "Journal of Venomous Animals and Toxins including Tropical Diseases"
+
+``` r
+# vector of words in titles
+title_words = unlist(all_titles_list)
+# get unique words
+unique_words = unique(title_words)
+# how many unique words in total
+num_unique_words = length(unique(title_words))
+num_unique_words
+```
+
+    ## [1] 772
+
+``` r
+# vector to store counts
+count_words = rep(0, num_unique_words)
+# count number of occurrences
+for (i in 1:num_unique_words) {
+    count_words[i] = sum(title_words == unique_words[i])
+}
+count_words_alt = table(title_words) 
+table(count_words)
+```
+
+    ## count_words
+    ##   1   2   3   4   5   6   7   8   9  10  11  12  13  14  15  16  17  18 
+    ## 293 270  56  42  32  18   9   6   8   5   3   2   2   1   1   1   1   4 
+    ##  19  20  24  25  34  39  41  47  49  63  91 126 234 247 
+    ##   2   1   1   2   1   1   1   1   1   2   1   1   2   1
+
+``` r
+# equivalently
+table(count_words_alt)
+```
+
+    ## count_words_alt
+    ##   1   2   3   4   5   6   7   8   9  10  11  12  13  14  15  16  17  18 
+    ## 293 270  56  42  32  18   9   6   8   5   3   2   2   1   1   1   1   4 
+    ##  19  20  24  25  34  39  41  47  49  63  91 126 234 247 
+    ##   2   1   1   2   1   1   1   1   1   2   1   1   2   1
+
+``` r
+# index values in decreasing order
+top_30_order = order(count_words, decreasing = TRUE)[1:30]
+# top 30 frequencies
+top_30_freqs = sort(count_words, decreasing = TRUE)[1:30]
+# select top 30 words
+top_30_words = unique_words[top_30_order]
+top_30_words
+```
+
+    ##  [1] "Journal"       "and"           "of"            "BMC"          
+    ##  [5] "Research"      "Medicine"      "Health"        "in"           
+    ##  [9] "International" "Science"       "Biology"       "Clinical"     
+    ## [13] "Molecular"     "Medical"       "Cancer"        "Systems"      
+    ## [17] "Sciences"      "Disorders"     "Practice"      "Care"         
+    ## [21] "Policy"        "Cell"          "Education"     "Surgery"      
+    ## [25] "Engineering"   "for"           "Environmental" "Technology"   
+    ## [29] "Diseases"      "Experimental"
+
+``` r
+# barplot
+barplot(top_30_freqs, border = NA, names.arg = top_30_words,
+las = 2, ylim = c(0, 100 * ceiling(max(count_words_alt)/100)))
+```
+
+![](RegExp_files/figure-markdown_github/unnamed-chunk-71-1.png)
+
+``` r
+expt1 <- try(library(wordcloud), silent = T) 
+```
+
+    ## Loading required package: RColorBrewer
+
+``` r
+if(length(expt1) == 1){
+    if(attr(expt1, 'condition')$message == "there is no package called ‘wordcloud’"){
+    install.packages('wordcloud', quiet = T) 
+    } 
+}
+library(wordcloud)  
+# wordcloud
+wordcloud(unique_words, count_words, scale=c(7.5,.5), min.freq=6, 
+          max.words=Inf, random.order=FALSE, rot.per=.10, random.color = T, 
+          colors = rainbow(20))
+```
+
+![](RegExp_files/figure-markdown_github/unnamed-chunk-72-1.png)

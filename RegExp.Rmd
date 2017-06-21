@@ -696,3 +696,132 @@ As you can see, we are using the regex pattern \\\\1 in the sub() function. Gene
 \\\\N is replaced with the N-th group specified in the regular expression. The first matched
 group is referenced by \\\\1. In our example, the first group is everything that is contained in
 the curved brackets, that is: (https.*), which are in fact the links we are looking for.
+
+## 7.4 Text Analysis of BioMed Central Journals  
+
+```{r}
+# link of data set
+url = "https://www.biomedcentral.com/info/journals/biomedcentraljournallist.txt"
+# read data (stringsAsFactors=FALSE)
+biomed = read.table(url, header = TRUE, sep = ",", stringsAsFactors = FALSE)
+```
+
+```{r}
+# structure of the dataset
+str(biomed, vec.len = 1)
+```
+
+```{r}
+# first 5 journal names
+head(biomed$Journal.name, 5)
+```
+
+```{r}
+# get first 10 names
+titles10 = biomed$Journal.name[1:10]
+titles10
+```
+
+```{r}
+# remove punctuation
+titles10 = str_replace_all(titles10, pattern = "[[:punct:]]", "")
+titles10
+```
+
+```{r}
+# trim extra whitespaces
+titles10 = str_replace_all(titles10, pattern = "\\s+", " ")
+titles10
+```
+
+```{r}
+# remove punctuation symbols
+all_titles = str_replace_all(biomed$Journal.name, pattern = "[[:punct:]]", "") 
+# trim extra whitespaces
+all_titles = str_replace_all(all_titles, pattern = "\\s+", " ") 
+# split titles by words
+all_titles_list = str_split(all_titles, pattern = " ")
+# show first 2 elements
+all_titles_list[1:2]
+```
+
+```{r}
+# how many words per title
+words_per_title = sapply(all_titles_list, length)
+# table of frequencies
+table(words_per_title)
+```
+
+```{r}
+# distribution
+100 * round(table(words_per_title)/length(words_per_title), 4) 
+```
+
+```{r}
+# summary
+summary(words_per_title)
+```
+
+```{r}
+# longest journal
+all_titles[which(words_per_title == 9)]
+```
+
+```{r}
+# vector of words in titles
+title_words = unlist(all_titles_list)
+# get unique words
+unique_words = unique(title_words)
+# how many unique words in total
+num_unique_words = length(unique(title_words))
+num_unique_words
+```
+
+```{r}
+# vector to store counts
+count_words = rep(0, num_unique_words)
+# count number of occurrences
+for (i in 1:num_unique_words) {
+    count_words[i] = sum(title_words == unique_words[i])
+}
+count_words_alt = table(title_words) 
+table(count_words)
+```
+
+```{r}
+# equivalently
+table(count_words_alt)
+```
+
+```{r}
+# index values in decreasing order
+top_30_order = order(count_words, decreasing = TRUE)[1:30]
+# top 30 frequencies
+top_30_freqs = sort(count_words, decreasing = TRUE)[1:30]
+# select top 30 words
+top_30_words = unique_words[top_30_order]
+top_30_words
+```
+
+```{r}
+# barplot
+barplot(top_30_freqs, border = NA, names.arg = top_30_words,
+las = 2, ylim = c(0, 100 * ceiling(max(count_words_alt)/100)))
+```
+
+```{r}
+expt1 <- try(library(wordcloud), silent = T) 
+if(length(expt1) == 1){
+    if(attr(expt1, 'condition')$message == "there is no package called ‘wordcloud’"){
+    install.packages('wordcloud', quiet = T) 
+    } 
+}
+library(wordcloud)  
+# wordcloud
+wordcloud(unique_words, count_words, scale=c(7.5,.5), min.freq=6, 
+          max.words=Inf, random.order=FALSE, rot.per=.10, random.color = T, 
+          colors = rainbow(20))
+```
+
+
+
