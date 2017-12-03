@@ -1,0 +1,60 @@
+---
+title: "R Web Crawler"
+author: "Rain.Wei"
+date: "12/3/2017"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE) 
+library(RSelenium) 
+library(rvest) 
+library(tidyverse) 
+```
+
+## 启动Selenium Web Driver  
+
+```{r}
+# Run a server for example using Docker
+# docker run -d -p 4445:4444 selenium/standalone-firefox:2.53.1
+# Use a debug image with a VNC viewer if you wish to view the browser
+# docker run -d -p 5901:5900 -p 127.0.0.1:4445:4444 --link http-server selenium/standalone-firefox-debug:2.53.1
+# See Docker vignette for more detail or run a Selenium Server manually.
+remDr <- remoteDriver(remoteServerAddr = "localhost" 
+                      , port = 4444L
+                      , browserName = "chrome"
+                      )
+
+remDr$open() 
+```
+
+## 进入目标网页，并下拉到底   
+
+```{r}
+remDr$navigate('https://www.zhihu.com/people/meretsger/following')
+remDr$executeScript('window.scrollTo(0, document.body.scrollHeight);', args = list("dummy"))
+```
+
+## 获取其中的数据   
+
+```{r} 
+page_source = remDr$getPageSource() 
+page_source_html = read_html(page_source[[1]])
+followings = page_source_html %>% 
+    html_nodes(css = 'span.UserLink.UserItem-name') %>% 
+    html_node(css = 'a.UserLink-link') %>% 
+    html_attrs() %>% 
+    lapply(function(m) return(data.frame(t(m)))) %>% 
+    plyr::rbind.fill() 
+followings$username <- page_source_html %>% 
+    html_nodes(css = 'span.UserLink.UserItem-name') %>% 
+    html_node(css = 'a.UserLink-link') %>% html_text() 
+followings.1 <- followings[, c('username', 'href')] %>% 
+    rename(user = username, userlink = href)
+DT::datatable(followings.1) 
+```
+
+```{r}
+
+```
+
